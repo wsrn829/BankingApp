@@ -13,7 +13,6 @@ public class UserDao {
         this.connection = ConnectionUtil.getConnection();
     }
 
-    public void truncateTable() throws SQLException {
 
-    }
+
 }

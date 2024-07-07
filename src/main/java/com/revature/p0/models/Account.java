@@ -1,19 +1,18 @@
 package com.revature.p0.models;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public class Account {
-    private int userId;
+    private int accountId;
     private String accountNumber;
-    private BigDecimal balance;
+    private Double balance;
     private List<Transaction> transactions;
 
     public Account () {
 
     }
 
-    public Account (String accountNumber, BigDecimal balance, List<Transaction> transactions) {
+    public Account (String accountNumber, Double balance, List<Transaction> transactions) {
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.transactions = transactions;
@@ -27,11 +26,11 @@ public class Account {
         this.accountNumber = accountNumber;
     }
 
-    public BigDecimal getBalance () {
+    public Double getBalance () {
         return balance;
     }
 
-    public void setBalance (BigDecimal balance) {
+    public void setBalance (Double balance) {
         this.balance = balance;
     }
 

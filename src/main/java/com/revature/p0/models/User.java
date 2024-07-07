@@ -8,32 +8,36 @@ public class User {
     private String lastName;
     private String username;
     private String password;
+    private String phoneNumber;
     List<Account> accounts;
 
-    public User() {
-    }
-
-    public User(Integer userId, String firstName, String lastName, String username, String password) {
+    public User(Integer userId, String firstName, String lastName, String username, String password, String phoneNumber) {
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.password = password;
+        this.phoneNumber = phoneNumber;
     }
 
-    public User(String firstName, String lastName, String username, String password, List<Account> accounts) {
+    public User(String firstName, String lastName, String username, String password, String phoneNumber, List<Account> accounts) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.password = password;
+        this.phoneNumber = phoneNumber;
         this.accounts = accounts;
     }
 
-    public User(String firstName, String lastName, String username, String password) {
+    public User(String firstName, String lastName, String username, String password, String phoneNumber) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.password = password;
+        this.phoneNumber = phoneNumber;
+    }
+
+    public User() {
     }
 
     public String getFirstName() {
@@ -66,6 +70,14 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public List<Account> getAccounts() {
