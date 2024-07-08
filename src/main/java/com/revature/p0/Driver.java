@@ -20,9 +20,9 @@ public class Driver {
 
         try {
             UserDao userDao = new UserDao(ConnectionUtil.getConnection());
-            userDao.dropTable();
-            userDao.createTable();
-            userDao.populateTable();
+//            userDao.dropTable();
+//            userDao.createTable();
+//            userDao.populateTable();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);

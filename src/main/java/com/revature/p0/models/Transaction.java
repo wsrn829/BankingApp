@@ -1,9 +1,6 @@
 package com.revature.p0.models;
 
-public enum Type {
-    DEPOSIT,
-    WITHDRAW
-}
+import com.revature.p0.models.Type;
 
 public class Transaction {
     private int accountId;
