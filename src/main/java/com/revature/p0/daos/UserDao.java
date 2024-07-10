@@ -37,7 +37,7 @@ public class UserDao {
 
     //Read user by ID
     public User getUserById(int userId) throws SQLException {
-        String sql = "SELECT * FROM users WHERE user_i= ?";
+        String sql = "SELECT * FROM users WHERE user_id= ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setInt(1, userId);
         ResultSet resultSet = preparedStatement.executeQuery();
@@ -57,7 +57,7 @@ public class UserDao {
 
     //Get user by username
     public User getUserByUsername(String username) throws SQLException {
-        String sql = "SELECT * FROM user WHERE username = ?";
+        String sql = "SELECT * FROM users WHERE username = ?";
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setString(1, username);
         ResultSet resultSet = preparedStatement.executeQuery();
