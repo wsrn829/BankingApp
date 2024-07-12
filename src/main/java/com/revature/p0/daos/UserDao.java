@@ -1,14 +1,11 @@
 package com.revature.p0.daos;
 
+import java.sql.*;
 import java.util.logging.Logger;
 
 import com.revature.p0.models.User;
 import com.revature.p0.utils.ConnectionUtil;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +22,7 @@ public class UserDao {
         String sql = "INSERT INTO users (first_name, last_name, username, password, phone_number) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnectionUtil.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, user.getFirstName());
             pstmt.setString(2, user.getLastName());
@@ -33,12 +30,27 @@ public class UserDao {
             pstmt.setString(4, user.getPassword());
             pstmt.setString(5, user.getPhoneNumber());
 
-            pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating user failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    user.setUserId(generatedKeys.getInt(1));
+                    // Print the generated user ID
+                    System.out.println("Created user with ID: " + user.getUserId());
+                } else {
+                    throw new SQLException("Creating user failed, no ID obtained.");
+                }
+            }
         } catch (SQLException | IOException e) {
             System.err.println("Unable to create user: " + e.getMessage());
             throw e;
         }
     }
+
 
     // Read user by user ID
     public User getUserById(int userId) throws SQLException {
