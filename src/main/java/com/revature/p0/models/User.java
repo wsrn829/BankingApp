@@ -1,6 +1,9 @@
 package com.revature.p0.models;
 
+import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 public class User {
     private Integer userId;
@@ -9,7 +12,8 @@ public class User {
     private String username;
     private String password;
     private String phoneNumber;
-    List<Account> accounts;
+
+    private List<Account> accounts = new ArrayList<>();
 
     public User(Integer userId, String firstName, String lastName, String username, String password, String phoneNumber) {
         this.userId = userId;
@@ -38,6 +42,14 @@ public class User {
     }
 
     public User() {
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
     public String getFirstName() {
@@ -86,14 +98,6 @@ public class User {
 
     public void setAccounts(List<Account> accounts) {
         this.accounts = accounts;
-    }
-
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
     }
 }
 

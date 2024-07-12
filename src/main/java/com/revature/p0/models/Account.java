@@ -1,21 +1,29 @@
 package com.revature.p0.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Account {
     private Integer accountId;
-    private Integer userId;
     private String accountNumber;
-    private Double balance;
-    private List<Transaction> transactions;
+    private BigDecimal balance;
+    private Integer userId;
 
-    public Account(Integer accountId, String accountNumber, Integer userId, Double balance) {
+    @JsonManagedReference
+    private List<Transaction> transactions = new ArrayList<>();
+    private Object LocalDateTime;
+
+    public Account(Integer accountId, String accountNumber, Integer userId, BigDecimal balance) {
         this.accountId = accountId;
         this.accountNumber = accountNumber;
         this.userId = userId;
         this.balance = balance;
-        this.transactions = new ArrayList<>();
     }
 
     public Account() {
@@ -38,19 +46,11 @@ public class Account {
         this.accountNumber = accountNumber;
     }
 
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
-    public Double getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public void setBalance(Double balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
 
@@ -62,27 +62,41 @@ public class Account {
         this.transactions = transactions;
     }
 
-    // Other methods
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
     public void addTransaction(Transaction transaction) {
+        if (this.transactions == null) {
+            this.transactions = new ArrayList<>();
+        }
         this.transactions.add(transaction);
     }
 
-    public void deposit(double amount) {
-        if (amount > 0) {
-            this.balance += amount;
-            this.addTransaction(new Transaction(this.accountId, "deposit", amount, this.balance));
+
+    public void deposit(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) > 0) {
+            this.balance = this.balance.add(amount);
+            Transaction depositTransaction = new Transaction(this.accountId, "deposit", amount, this);
+            this.addTransaction(depositTransaction);
         }
     }
 
-    public void withdraw(double amount) {
-        if (amount > 0 && this.balance >= amount) {
-            this.balance -= amount;
-            this.addTransaction(new Transaction(this.accountId, "withdrawal", amount, this.balance));
+    public void withdraw(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) > 0 && this.balance.compareTo(amount) >= 0) {
+            this.balance = this.balance.subtract(amount);
+            Transaction withdrawalTransaction = new Transaction(this.accountId, "withdrawal", amount, this);
+            this.addTransaction(withdrawalTransaction);
         }
     }
 
-    public void transferTo(Account destinationAccount, double amount) {
-        if (amount > 0 && this.balance >= amount) {
+    public void transferTo(Account destinationAccount, BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) > 0 && this.balance.compareTo(amount) >= 0) {
             this.withdraw(amount);
             destinationAccount.deposit(amount);
             this.addTransaction(new Transaction(this.accountId, "transfer_out", amount, this.balance));

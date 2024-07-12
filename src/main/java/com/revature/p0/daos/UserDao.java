@@ -1,118 +1,136 @@
 package com.revature.p0.daos;
 
+import java.util.logging.Logger;
+
 import com.revature.p0.models.User;
 import com.revature.p0.utils.ConnectionUtil;
 
-import java.io.IOException;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDao {
-    Connection connection;
+    private static final Logger LOGGER = Logger.getLogger(UserDao.class.getName());
+    private final Connection connection;
 
-    //Establish connection with database
-    public UserDao(Connection connection) throws SQLException, IOException {
-        this.connection = ConnectionUtil.getConnection();
+    public UserDao(Connection connection) {
+        this.connection = connection;
     }
 
-    //CRUD Operations
-    //PreparedStatement helps prevent SQL injection attacks by automatically escaping special characters in SQL queries
-
-    //Create a new user
-    public void createUser(User user) throws SQLException {
+    public void createUser(User user) throws SQLException, IOException {
         String sql = "INSERT INTO users (first_name, last_name, username, password, phone_number) VALUES (?, ?, ?, ?, ?)";
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setString(1, user.getFirstName());
-        preparedStatement.setString(2, user.getLastName());
-        preparedStatement.setString(3, user.getUsername());
-        preparedStatement.setString(4, user.getPassword());
-        preparedStatement.setString(5, user.getPhoneNumber());
-        preparedStatement.executeUpdate();
+
+        try (Connection conn = ConnectionUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, user.getFirstName());
+            pstmt.setString(2, user.getLastName());
+            pstmt.setString(3, user.getUsername());
+            pstmt.setString(4, user.getPassword());
+            pstmt.setString(5, user.getPhoneNumber());
+
+            pstmt.executeUpdate();
+        } catch (SQLException | IOException e) {
+            System.err.println("Unable to create user: " + e.getMessage());
+            throw e;
+        }
     }
 
-    //Read user by ID
+    // Read user by user ID
     public User getUserById(int userId) throws SQLException {
-        String sql = "SELECT * FROM users WHERE user_id= ?";
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setInt(1, userId);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        if (resultSet.next()) {
-            return new User(
-                    resultSet.getInt("user_id"),
-                    resultSet.getString("first_name"),
-                    resultSet.getString("last_name"),
-                    resultSet.getString("username"),
-                    resultSet.getString("password"),
-                    resultSet.getString("phone_number")
-                    );
-        } else {
-            return null;
+        String sql = "SELECT * FROM users WHERE user_id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, userId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    User user = new User();
+                    user.setUserId(resultSet.getInt("user_id"));
+                    user.setUsername(resultSet.getString("username"));
+                    user.setPassword(resultSet.getString("password"));
+                    return user;
+                }
+            }
+        }
+        return null;
+    }
+
+    // Update user password
+    public void updateUserPassword(User user) throws SQLException {
+        String sql = "UPDATE users SET password = ? WHERE user_id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, user.getPassword());
+            preparedStatement.setInt(2, user.getUserId());
+            preparedStatement.executeUpdate();
         }
     }
 
-    //Get user by username
-    public User getUserByUsername(String username) throws SQLException {
+    // Delete user by user ID
+    public void deleteUser(int userId) throws SQLException {
+        String sql = "DELETE FROM users WHERE user_id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, userId);
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    // Retrieve a user by username
+    public User getUserByUsername(String username) throws SQLException, IOException {
         String sql = "SELECT * FROM users WHERE username = ?";
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setString(1, username);
-        ResultSet resultSet = preparedStatement.executeQuery();
-        if (resultSet.next()) {
-            return new User(
-                    resultSet.getInt("user_id"),
-                    resultSet.getString("first_name"),
-                    resultSet.getString("last_name"),
-                    resultSet.getString("username"),
-                    resultSet.getString("password"),
-                    resultSet.getString("phone_number")
-            );
-        } else {
-            return null;
+        User user = null;
+        try (Connection conn = ConnectionUtil.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    user = new User();
+                    user.setUserId(rs.getInt("user_id"));
+                    user.setFirstName(rs.getString("first_name"));
+                    user.setLastName(rs.getString("last_name"));
+                    user.setUsername(rs.getString("username"));
+                    user.setPassword(rs.getString("password"));
+                    user.setPhoneNumber(rs.getString("phone_number"));
+                    // Assuming there's a method to load user's accounts
+                    // user.setAccounts(loadUserAccounts(user.getUserId()));
+                }
+            }
         }
+        return user;
     }
 
-    //Get all users
+    // Retrieve all users from the database
     public List<User> getAllUsers() throws SQLException {
-        String sql = "SELECT * FROM users";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(sql);
         List<User> users = new ArrayList<>();
-        while (resultSet.next()) {
-            users.add(new User(
-                    resultSet.getInt("user_id"),
-                    resultSet.getString("first_name"),
-                    resultSet.getString("last_name"),
-                    resultSet.getString("username"),
-                    resultSet.getString("password"),
-                    resultSet.getString("phone_number")
-            ));
+        String sql = "SELECT * FROM users";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    User user = new User();
+                    user.setUserId(resultSet.getInt("user_id"));
+                    user.setUsername(resultSet.getString("username"));
+                    user.setPassword(resultSet.getString("password"));
+                    users.add(user);
+                }
+            }
         }
         return users;
     }
 
-    //Update User
-    public void updateUser(User user) throws SQLException {
-        String sql = "UPDATE users SET first_name = ?, last_name = ?, username = ?, password = ? WHERE user_id = ?";
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setString(1, user.getFirstName());
-        preparedStatement.setString(2, user.getLastName());
-        preparedStatement.setString(3, user.getUsername());
-        preparedStatement.setString(4, user.getPassword());
-        preparedStatement.setString(5, user.getPhoneNumber());
-        preparedStatement.setInt(6, user.getUserId());
-        preparedStatement.executeUpdate();
-    }
-
-
-    //Delete user
-    public void deleteUser(int userId) throws SQLException {
-        String sql = "DELETE FROM users WHERE user_id = ?";
-        PreparedStatement preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setInt(1, userId);
-        preparedStatement.executeUpdate();
+    // Update user information
+    public void updateUser(User user) throws SQLException, IOException {
+        String sql = "UPDATE users SET username = ?, password = ? WHERE user_id = ?";
+        try (Connection conn = ConnectionUtil.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, user.getUsername());
+            preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setInt(3, user.getUserId());
+            preparedStatement.executeUpdate();
+        } catch (SQLException | IOException e) {
+            LOGGER.severe("Update failed: " + e.getMessage());
+            throw e;
+        }
     }
 }

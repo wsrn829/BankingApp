@@ -27,7 +27,7 @@ public class Driver {
             // Initialize AccountDao, TransactionDao, AccountService, and TransactionService
             AccountDao accountDao = new AccountDao(connection);
             TransactionDao transactionDao = new TransactionDao(connection);
-            AccountService accountService = new AccountService(accountDao, transactionDao);
+            AccountService accountService = new AccountService(accountDao, transactionDao, connection);
             TransactionService transactionService = new TransactionService(transactionDao);
 
             // Initialize AccountController and TransactionController
