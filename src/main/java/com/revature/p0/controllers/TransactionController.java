@@ -46,8 +46,8 @@ public class TransactionController {
                 return;
             }
 
-            Connection conn = null;
-            transactionService.transferBetweenAccounts(conn, sourceAccountId, destinationAccountId, amount);
+            // Assuming transactionService.transferBetweenAccounts is adjusted to not require a connection parameter
+            transactionService.transferBetweenAccounts(sourceAccountId, destinationAccountId, amount);
             ctx.status(200).result("Transfer successful");
         } catch (NumberFormatException e) {
             logger.error("Error parsing parameters for transfer", e);
@@ -84,25 +84,17 @@ public class TransactionController {
         }
     }
 
-    private void getTransactionsByAccountId(Context ctx) {
+    public void getTransactionsByAccountId(Context ctx) {
         try {
             int accountId = Integer.parseInt(ctx.pathParam("accountId"));
-            if (accountId <= 0) {
-                ctx.status(400).result("Invalid account ID");
-                return;
-            }
             List<Transaction> transactions = transactionService.getTransactionsByAccountId(accountId);
-            if (!transactions.isEmpty()) {
-                ctx.json(transactions);
+            if (transactions.isEmpty()) {
+                ctx.status(404).result("No transactions found for account ID: " + accountId);
             } else {
-                ctx.status(404).result("No transactions found for this account");
+                ctx.json(transactions);
             }
-        } catch (NumberFormatException e) {
-            logger.error("Error parsing account ID", e);
+        } catch (NumberFormatException | SQLException e) {
             ctx.status(400).result("Invalid account ID format");
-        } catch (SQLException e) {
-            logger.error("SQL exception in getTransactionsByAccountId", e);
-            ctx.status(500).result("Internal server error");
         }
     }
 }

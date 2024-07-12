@@ -128,8 +128,7 @@ public class AccountController {
     }
 
     private void transfer(Context ctx) {
-        try (Connection conn = ConnectionUtil.getConnection()) {
-            conn.setAutoCommit(false); // Start transaction
+        try {
             AmountWrapper amountWrapper = ctx.bodyAsClass(AmountWrapper.class);
             int sourceAccountId = amountWrapper.getSourceAccountId();
             int destinationAccountId = amountWrapper.getDestinationAccountId();
@@ -140,20 +139,12 @@ public class AccountController {
                 return;
             }
 
-            accountService.transferBetweenAccounts(conn, sourceAccountId, destinationAccountId, amount);
+            accountService.transferBetweenAccounts(sourceAccountId, destinationAccountId, amount);
             ctx.status(200).result("Transfer successful");
-        } catch (NumberFormatException e) {
-            ctx.status(400).result("Invalid account ID or amount format");
-        } catch (NullPointerException e) {
-            ctx.status(400).result("Missing required JSON parameters");
-        } catch (SQLException e) {
+        } catch (AccountNotFoundException | InsufficientFundsException e) {
+            ctx.status(404).result(e.getMessage());
+        } catch (Exception e) {
             ctx.status(500).result("Database error during transfer: " + e.getMessage());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InsufficientFundsException e) {
-            throw new RuntimeException(e);
-        } catch (AccountNotFoundException e) {
-            throw new RuntimeException(e);
         }
     }
 

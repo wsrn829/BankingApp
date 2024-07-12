@@ -66,29 +66,35 @@ public class TransactionDao {
     }
 
     // Read transactions by account ID
-    public List<Transaction> getTransactionsByAccountId(int accountId) throws SQLException {
-        String sql = "SELECT * FROM transactions WHERE account_id = ?";
+    public List<Transaction> getTransactionsByAccountId(int accountId) {
         List<Transaction> transactions = new ArrayList<>();
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setInt(1, accountId);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    Transaction transaction = new Transaction(
-                            resultSet.getInt("transaction_id"),
-                            resultSet.getInt("account_id"),
-                            resultSet.getString("type"),
-                            resultSet.getBigDecimal("amount")
-                    );
-                    transactions.add(transaction);
-                }
+        String sql = "SELECT * FROM transactions WHERE account_id = ?";
+
+        try (Connection conn = ConnectionUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, accountId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Transaction transaction = new Transaction(
+                        rs.getInt("transaction_id"),
+                        rs.getInt("account_id"),
+                        rs.getString("type"),
+                        rs.getBigDecimal("amount")
+                );
+                transactions.add(transaction);
             }
+        } catch (SQLException | IOException e) {
+            e.printStackTrace(); // Consider a more robust logging strategy
         }
+
         return transactions;
     }
 
     // Method to deposit amount into an account
     public void deposit(int accountId, BigDecimal amount, Connection connection) throws SQLException {
-        BigDecimal currentBalance = getCurrentBalance(accountId, connection);
+        BigDecimal currentBalance = getCurrentBalance(accountId);
         BigDecimal newBalance = currentBalance.add(amount);
         updateAccountBalance(accountId, newBalance);
 
@@ -98,7 +104,7 @@ public class TransactionDao {
 
     // Method to withdraw amount from an account
     public void withdraw(int accountId, BigDecimal amount, Connection connection) throws SQLException {
-        BigDecimal currentBalance = getCurrentBalance(accountId, connection);
+        BigDecimal currentBalance = getCurrentBalance(accountId);
         if (currentBalance.compareTo(amount) >= 0) { // Ensure sufficient funds
             BigDecimal newBalance = currentBalance.subtract(amount);
             updateAccountBalance(accountId, newBalance);
@@ -120,7 +126,7 @@ public class TransactionDao {
         }
     }
 
-    public BigDecimal getCurrentBalance(int accountId, Connection connection) throws SQLException {
+    public BigDecimal getCurrentBalance(int accountId) throws SQLException {
         String sql = "SELECT balance FROM accounts WHERE account_id = ?";
         try (PreparedStatement preparedStatement = this.connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, accountId);
@@ -160,10 +166,10 @@ public class TransactionDao {
     }
 
     public boolean accountDoesNotExist(int accountId) throws SQLException {
-        return !accountExists(accountId, connection);
+        return !accountExists(accountId);
     }
 
-    public boolean accountExists(int accountId, Connection connection) throws SQLException {
+    public boolean accountExists(int accountId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM accounts WHERE account_id = ?";
         try (PreparedStatement preparedStatement = this.connection.prepareStatement(sql)) {
             preparedStatement.setInt(1, accountId);
