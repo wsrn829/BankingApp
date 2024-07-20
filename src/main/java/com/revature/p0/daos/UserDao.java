@@ -113,24 +113,6 @@ public class UserDao {
         return user;
     }
 
-    // Retrieve all users from the database
-    public List<User> getAllUsers() throws SQLException {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM users";
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    User user = new User();
-                    user.setUserId(resultSet.getInt("user_id"));
-                    user.setUsername(resultSet.getString("username"));
-                    user.setPassword(resultSet.getString("password"));
-                    users.add(user);
-                }
-            }
-        }
-        return users;
-    }
-
     // Update user information
     public void updateUser(User user) throws SQLException, IOException {
         String sql = "UPDATE users SET username = ?, password = ? WHERE user_id = ?";
